@@ -1,0 +1,19 @@
+#请将以下任务通过'crontab -e' 配置成定时任务，具体调度时间上，请结合自己的应用决定。
+#官方推荐increamental repair可以每天执行一次，full repair建议一周执行一次。
+#默认的gc_grace_seconds为864000s.即为10天。所以为了安全起见，一周执行一次全量repair比较好。
+
+#建议采用sequence的方式进行repair,对业务的影响小。使用parallel会更快，但是很容易搞得线上抖动。
+
+#以下是每天凌晨两点执行的增量repair
+#视情况可能需要自己配置端口
+#host是几个node的ip
+
+0 2 * * *  $CASSANDRA_INSTALL_PATH/bin/nodetool repair -hosts 10.10.10.11,10.10.10.12,10.10.10.13 -seq
+
+# 以下是每周一凌晨4点执行一次全量repair
+0 4 * * 1 $CASSANDRA_INSTALL_PATH/bin/nodetool repair -hosts 10.10.10.11,10.10.10.12,10.10.10.13 -full -seq
+
+
+###！！！特别注意，repair操作必须是一个节点一个节点跑的，上面的两个任务可能会因为数据量太大的原因，冲突。即一个repair操作还没执行完，第二个又开始。使用时应该自己多加注意。视实际情况调整执行实际的间隔。
+
+
